@@ -33,6 +33,13 @@ let ufoHeight = 80;
 
 let speed = 4;
 
+let lasers = [];
+let laserCooldown = 0;
+let laserCooldownMax = 60;
+let laserSpeed = 5;
+let laserRange = 100;
+let ufoFollowSpeed = 0.02;
+
 function drawScene() {
 
     ctx.fillStyle = 'skyblue';
@@ -52,8 +59,7 @@ function resizeUFO(){
     let scale = 0.35;
     let topMargin = -20; 
     ctx.translate(
-        canvas.width / 2 - (UFO.width * scale) / 2,
-        topMargin
+       ufoX, topMargin
     );
     ctx.scale(scale, scale);
 }
@@ -70,6 +76,62 @@ function resizeCanvas() {
     ufoY = canvas.height * 0.2;
 }
 
+function tryLaser() {
+    if (laserCooldown <= 0) {
+        let offset = (Math.random() * 2 - 1) * laserRange;
+
+        let startX = ufoX + ufoWidth / 2;
+        let startY = ufoY + ufoHeight * 0.8;
+
+        let targetX = PlayerX + offset;
+        let targetY = PlayerY;
+
+        let dx = targetX - startX;
+        let dy = targetY - startY;
+        let dist = Math.sqrt(dx * dx + dy * dy);
+
+        lasers.push({
+            startX, startY,
+            dirX: dx / dist,
+            dirY: dy / dist,
+            travelled: 0,
+            length: 40 
+        });
+
+        laserCooldown = laserCooldownMax;
+    }
+
+    if (laserCooldown > 0) laserCooldown--;
+}
+
+function updateAndDrawLasers() {
+    ctx.save();
+    ctx.setTransform(1, 0, 0, 1, 0, 0); 
+    ctx.strokeStyle = 'red';
+    ctx.lineWidth = 10;
+    ctx.lineCap = "round";
+
+    for (let i = lasers.length - 1; i >= 0; i--) {
+        let laser = lasers[i];
+        laser.travelled += laserSpeed;
+
+        let headX = laser.startX + laser.dirX * laser.travelled;
+        let headY = laser.startY + laser.dirY * laser.travelled;
+        let tailX = headX - laser.dirX * laser.length;
+        let tailY = headY - laser.dirY * laser.length;
+
+        ctx.beginPath();
+        ctx.moveTo(tailX, tailY);
+        ctx.lineTo(headX, headY);
+        ctx.stroke();
+
+        if (headY > canvas.height + laser.length || headX < -50 || headX > canvas.width + 50) {
+            lasers.splice(i, 1);
+        }
+    }
+    ctx.restore();
+}
+
 function animate() {
     drawScene();
     requestAnimationFrame(animate); 
@@ -83,6 +145,9 @@ function animate() {
     let scale = 1.5; 
     let halfW = (spriteWidth * scale) / 2;
     PlayerX = Math.max(halfW, Math.min(window.innerWidth - halfW, PlayerX));
+
+    let targetUfoX = PlayerX - ufoWidth / 2; 
+    ufoX += (targetUfoX - ufoX) * ufoFollowSpeed;
     
     if(moveLeft || moveRight){
         currentFrame = currentFrame % totalFrames;
@@ -103,6 +168,9 @@ function animate() {
     resizeUFO();
     ctx.drawImage(UFO, 0, 0, UFO.width, UFO.height);
     ctx.restore();
+
+    tryLaser();
+    updateAndDrawLasers();
 
     ctx.save();
     resizeSprite();
