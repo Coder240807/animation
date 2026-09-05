@@ -25,40 +25,62 @@ ctx.imageSmoothingEnabled = false;
 function animate() {
     drawScene();
     requestAnimationFrame(animate); 
-    currentFrame = currentFrame % totalFrames;
-    srcX = currentFrame * spriteWidth;
+    if(moveLeft){
+        PlayerX -= speed;
+    }
+    if(moveRight){
+        PlayerX += speed;
+    }
+
+    if(moveLeft || moveRight){
+        currentFrame = currentFrame % totalFrames;
+        srcX = currentFrame * spriteWidth;
+    
+        framesDrawn++;
+        if(framesDrawn >= 10){
+        currentFrame++;
+        framesDrawn = 0;
+       }
+    }
+    else{
+        currentFrame = 2;
+        srcX = currentFrame * spriteWidth;
+    }
 
     ctx.save();
     resizeImage();
     ctx.drawImage(spriteSheet, srcX, srcY, spriteWidth, spriteHeight, 0, 0, spriteWidth, spriteHeight);
     ctx.restore();
-    //img, srcX, srcY, spriteWidth, spriteHeight, x, y, width, height
-    framesDrawn++;
-    if(framesDrawn >= 10){
-        currentFrame++;
-        framesDrawn = 0;
-    }
 }
 
 function resizeImage(){
     let scale = 2;
-    let midXpos = innerWidth / 2 - (spriteWidth * scale) / 2;
-    let midYpos = innerHeight / 2 - (spriteHeight * scale) / 2;
-    ctx.translate(midXpos, midYpos);
+    ctx.translate(PlayerX - (spriteWidth * scale) / 2, PlayerY - (spriteHeight * scale) / 2);
     ctx.scale(scale, scale);
 }
 
+let PlayerX = window.innerWidth / 2;
+let PlayerY = window.innerHeight / 2;
+let speed = 4;
+
+let moveLeft = false;
+let moveRight = false;
+
 addEventListener("keydown", e => {
-    if(e.key === "ArrowLeft") {
-        srcY = spriteHeight*1;
+    if (e.key === "ArrowLeft") {
+        srcY = spriteHeight * 1;
+        moveLeft = true;
     }
-})
+    if (e.key === "ArrowRight") {
+        srcY = spriteHeight * 0;
+        moveRight = true;
+    }
+});
 
 addEventListener("keyup", e => {
-    if(e.key === "ArrowRight") {
-        srcY = spriteHeight*0;
-    }
-})
+    if (e.key === "ArrowLeft") moveLeft = false;
+    if (e.key === "ArrowRight") moveRight = false;
+});
 
 
 let spriteWidth=0;
@@ -85,7 +107,5 @@ function drawScene() {
     ctx.fillRect(0, canvas.height * 0.65, canvas.width, canvas.height * 0.35);
 
 }
-
-
 
 window.addEventListener('resize', drawScene);
