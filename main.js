@@ -19,8 +19,9 @@ let srcX = 0;
 let srcY = 0;
 let framesDrawn = 0;
 
-ctx.webkitImageSmoothingEnabled = false;
-ctx.imageSmoothingEnabled = false;
+let PlayerX = window.innerWidth / 2;
+let PlayerY = window.innerHeight / 2;
+let speed = 4;
 
 function animate() {
     drawScene();
@@ -32,6 +33,10 @@ function animate() {
         PlayerX += speed;
     }
 
+    let scale = 2; 
+    let halfW = (spriteWidth * scale) / 2;
+    PlayerX = Math.max(halfW, Math.min(window.innerWidth - halfW, PlayerX));
+    
     if(moveLeft || moveRight){
         currentFrame = currentFrame % totalFrames;
         srcX = currentFrame * spriteWidth;
@@ -59,9 +64,7 @@ function resizeImage(){
     ctx.scale(scale, scale);
 }
 
-let PlayerX = window.innerWidth / 2;
-let PlayerY = window.innerHeight / 2;
-let speed = 4;
+
 
 let moveLeft = false;
 let moveRight = false;
@@ -78,8 +81,8 @@ addEventListener("keydown", e => {
 });
 
 addEventListener("keyup", e => {
-    if (e.key === "ArrowLeft") moveLeft = false;
-    if (e.key === "ArrowRight") moveRight = false;
+    if (e.key === "ArrowLeft"){ moveLeft = false; }
+    if (e.key === "ArrowRight"){ moveRight = false; }
 });
 
 
@@ -105,7 +108,12 @@ function drawScene() {
 
     ctx.fillStyle = '#3d251e';
     ctx.fillRect(0, canvas.height * 0.65, canvas.width, canvas.height * 0.35);
-
 }
 
-window.addEventListener('resize', drawScene);
+function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    ctx.imageSmoothingEnabled = false;
+}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
