@@ -18,8 +18,6 @@ let currentFrame = 0;
 let srcX = 0;
 let srcY = 0;
 let framesDrawn = 0;
-let spriteWidth = spriteSheet.width / cols;   
-let spriteHeight = spriteSheet.height / rows; 
 
 ctx.webkitImageSmoothingEnabled = false;
 ctx.imageSmoothingEnabled = false;
@@ -63,11 +61,16 @@ addEventListener("keyup", e => {
 })
 
 
+let spriteWidth=0;
+let spriteHeight=0;
 
 function loadImages() {
     if (--numberOfImg > 0) {
         return;
     }
+    spriteWidth = spriteSheet.width / cols;   
+    spriteHeight = spriteSheet.height / rows; 
+
     animate();
 }
 
