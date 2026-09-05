@@ -38,11 +38,13 @@ let laserCooldown = 0;
 let laserCooldownMax = 60;
 let laserSpeed = 5;
 let laserRange = 100;
-let ufoFollowSpeed = 0.02;
+let ufoFollowSpeed = 0.01;
+
+let gameOver = false;
 
 function drawScene() {
 
-    ctx.fillStyle = 'skyblue';
+    ctx.fillStyle = 'black';
     ctx.fillRect(0, 0, canvas.width, canvas.height * 0.65);
 
     ctx.fillStyle = '#3d251e';
@@ -132,7 +134,29 @@ function updateAndDrawLasers() {
     ctx.restore();
 }
 
+function checkLaserCollision() {
+    let hitboxMargin = 0.5;
+    let halfW = (spriteWidth * scale * hitboxMargin) / 2;
+    let halfH = (spriteHeight * scale * hitboxMargin) / 2;
+
+    let left = PlayerX - halfW;
+    let right = PlayerX + halfW;
+    let top = PlayerY - halfH;
+    let bottom = PlayerY + halfH;
+
+    for (let laser of lasers) {
+        let headX = laser.startX + laser.dirX * laser.travelled;
+        let headY = laser.startY + laser.dirY * laser.travelled;
+
+        if (headX >= left && headX <= right && headY >= top && headY <= bottom) {
+            return true;
+        }
+    }
+    return false;
+}
+
 function animate() {
+    if(gameOver) return;
     drawScene();
     requestAnimationFrame(animate); 
     if(moveLeft){
@@ -176,6 +200,22 @@ function animate() {
     resizeSprite();
     ctx.drawImage(spriteSheet, srcX, srcY, spriteWidth, spriteHeight, 0, 0, spriteWidth, spriteHeight);
     ctx.restore();
+
+    if (checkLaserCollision()) {
+        gameOver = true;
+        showGameOver();
+    }
+}
+
+function showGameOver() {
+    ctx.setTransform(1, 0, 0, 1, 0, 0); 
+    ctx.fillStyle = 'rgba(0,0,0,0.6)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.fillStyle = 'white';
+    ctx.font = '48px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('GAME OVER', canvas.width / 2, canvas.height / 2);
 }
 
 function loadImages() {
