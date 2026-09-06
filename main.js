@@ -304,8 +304,8 @@ spriteSheet.onload = loadImages;
 UFO.onload = loadImages;
 NightCity.onload = loadImages;
 
-spriteSheet.src = 'Spritesheet.png';
-UFO.src = 'UFO.png';
-NightCity.src = 'Nightcity.jpg'
+spriteSheet.src = './images/Spritesheet.png';
+UFO.src = './images/UFO.png';
+NightCity.src = './images/Nightcity.jpg'
 
 resizeCanvas();
