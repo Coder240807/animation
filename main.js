@@ -96,9 +96,6 @@ function tryFireLaser() {
 function updateAndDrawLasers() {
     ctx.save();
     ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.strokeStyle = "red";
-    ctx.lineCap = "round"
-    ctx.lineWidth = 10;
 
     let currentSpeed = getCurrentLaserSpeed();
 
@@ -111,7 +108,7 @@ function updateAndDrawLasers() {
         let tailX = headX - laser.dirX * laser.length;
         let tailY = headY - laser.dirY * laser.length;
 
-        let pulse = 1 + Math.sin(laser.flicker) * 0.15;
+        let pulse = 1 + Math.sin(laser.flicker) * 0.20;
 
         ctx.strokeStyle = 'rgba(255, 60, 60, 0.35)';
         ctx.lineWidth = 10 * pulse;

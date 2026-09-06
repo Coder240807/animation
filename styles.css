@@ -7,3 +7,51 @@
 body{
     overflow: hidden;
 }
+
+.game-btn{
+    font-family:'Courier New', Courier, monospace;
+    font-weight: bold;
+    font-size: 22px;
+    letter-spacing: 2px;
+    padding: 16px 40px;
+    color: #ffe9c7;
+    background: linear-gradient(180deg, #1b1440 0%, #100c2c 100%);
+    border: 2px solid #7fd6ff;
+    border-radius: 6px;
+    cursor: pointer;
+    box-shadow:
+        0 0 8px rgba(127, 214, 255, 0.6),
+        0 0 20px rgba(127, 214, 255, 0.3),
+        inset 0 0 12px rgba(255, 233, 199, 0.08);
+        transition: all 0.15s ease-in-out;
+}
+
+.game-btn:hover {
+    color: #0a0a1a;
+    background: #7fd6ff;
+    box-shadow:
+        0 0 14px rgba(127, 214, 255, 0.9),
+        0 0 34px rgba(127, 214, 255, 0.6);
+    transform: scale(1.04);
+}
+
+.game-btn:active {
+        transform: scale(0.97);
+    }
+ 
+    
+.replay-btn {
+    border-color: #ffb15e;
+    box-shadow:
+        0 0 8px rgba(255, 177, 94, 0.6),
+        0 0 20px rgba(255, 177, 94, 0.3),
+        inset 0 0 12px rgba(255, 233, 199, 0.08);
+}
+ 
+.replay-btn:hover {
+    background: #ffb15e;
+    color: #1b1440;
+    box-shadow:
+        0 0 14px rgba(255, 177, 94, 0.9),
+        0 0 34px rgba(255, 177, 94, 0.6);
+}
