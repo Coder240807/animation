@@ -41,10 +41,23 @@ let speed = 6;
 let maxLaserSpeed = 18;      
 let speedRampDuration = 30000;
 
+let elapsed = 0;
+
+
 function drawScene() {
     ctx.drawImage(NightCity,0,0, canvas.width, canvas.height*0.75);
     ctx.fillStyle = 'black';
     ctx.fillRect(0, canvas.height * 0.75, canvas.width, canvas.height * 0.25);
+}
+
+function drawTimer() {
+    ctx.save();
+    ctx.setTransform(1,0,0,1,0,0);
+    ctx.fillStyle = '#ffe9c7' ;
+    ctx.font = 'bold 28px monospace';
+    ctx.textAlign = 'left';
+    ctx.fillText(`Time: ${elapsed.toFixed(1)}s`, 20, 40);
+    ctx.restore();
 }
 
 function resizeImage() {
@@ -158,12 +171,13 @@ function checkLaserCollision() {
 }
 
 function getCurrentLaserSpeed() {
-    let elapsed = performance.now() - gameStartTime;
+    elapsed = performance.now() - gameStartTime;
     let progress = Math.min(elapsed / speedRampDuration, 1); 
     return speed + (maxLaserSpeed - speed) * progress;
 }
 
 function showGameOver() {
+    let finalSurvivalTime = elapsed;
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.fillStyle = 'rgba(0,0,0,0.6)';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -181,6 +195,9 @@ function animate() {
 
     drawScene();
     requestAnimationFrame(animate);
+
+    elapsed = (performance.now() - gameStartTime)/1000;
+    drawTimer();
 
     if (moveLeft) PlayerX -= speed;
     if (moveRight) PlayerX += speed;
