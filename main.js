@@ -5,7 +5,7 @@ const startBtn = document.getElementById('startBtn');
 const restartBtn = document.getElementById('restartBtn');
 
 
-let numberOfImg = 2;
+let numberOfImg = 3;
 
 let cols = 8;
 let rows = 2;
@@ -19,7 +19,6 @@ let spriteWidth = 0;
 let spriteHeight = 0;
 let scale = 1.5;
 let PlayerX, PlayerY;
-let speed = 4;
 
 let moveLeft = false;
 let moveRight = false;
@@ -29,21 +28,23 @@ let ufoWidth;
 let ufoHeight;
 let ufoScale = 0.35;
 let topMargin = -10;
-let ufoFollowSpeed = 0.01;
+let ufoFollowSpeed = 0.02;
 
 let lasers = [];
-let laserCooldownMax = 60;
-let laserCooldown = laserCooldownMax;
-let laserSpeed = 7;
-let laserSpread = 100;
+let laserCooldownMax = 35;
+let laserCooldown = 0;
+let laserSpread = 50;
 let gameOver = false;
 
+let gameStartTime = 0;
+let speed = 6;      
+let maxLaserSpeed = 18;      
+let speedRampDuration = 30000;
 
 function drawScene() {
+    ctx.drawImage(NightCity,0,0, canvas.width, canvas.height*0.75);
     ctx.fillStyle = 'black';
-    ctx.fillRect(0, 0, canvas.width, canvas.height * 0.65);
-    ctx.fillStyle = '#3d251e';
-    ctx.fillRect(0, canvas.height * 0.65, canvas.width, canvas.height * 0.35);
+    ctx.fillRect(0, canvas.height * 0.75, canvas.width, canvas.height * 0.25);
 }
 
 function resizeImage() {
@@ -62,7 +63,7 @@ function resizeCanvas() {
     ctx.imageSmoothingEnabled = false;
 
     PlayerX = canvas.width / 2;
-    PlayerY = canvas.height * 0.68 - (spriteHeight * scale) / 2;
+    PlayerY = canvas.height * 0.78 - (spriteHeight * scale) / 2;
 
     ufoX = canvas.width / 2 - (ufoWidth || 0) / 2;
 }
@@ -99,9 +100,11 @@ function updateAndDrawLasers() {
     ctx.lineCap = "round"
     ctx.lineWidth = 10;
 
+    let currentSpeed = getCurrentLaserSpeed();
+
     for (let i = lasers.length - 1; i >= 0; i--) {
         let laser = lasers[i];
-        laser.travelled += laserSpeed;
+        laser.travelled += currentSpeed;
 
         let headX = laser.startX + laser.dirX * laser.travelled;
         let headY = laser.startY + laser.dirY * laser.travelled;
@@ -155,6 +158,12 @@ function checkLaserCollision() {
         }
     }
     return false;
+}
+
+function getCurrentLaserSpeed() {
+    let elapsed = performance.now() - gameStartTime;
+    let progress = Math.min(elapsed / speedRampDuration, 1); 
+    return speed + (maxLaserSpeed - speed) * progress;
 }
 
 function showGameOver() {
@@ -235,11 +244,12 @@ function startGame() {
 
     gameOver = false;
     lasers = [];
-    laserCooldown = 0;
+    laserCooldown = 60;
     currentFrame = 0;
     framesDrawn = 0;
     moveLeft = false;
     moveRight = false;
+    gameStartTime = performance.now();
 
     resizeCanvas();
     animate();
@@ -274,11 +284,14 @@ window.addEventListener('resize', resizeCanvas);
 
 const spriteSheet = new Image();
 const UFO = new Image();
+const NightCity = new Image();
 
 spriteSheet.onload = loadImages;
 UFO.onload = loadImages;
+NightCity.onload = loadImages;
 
 spriteSheet.src = 'Spritesheet.png';
 UFO.src = 'UFO.png';
+NightCity.src = 'Nightcity.jpg'
 
 resizeCanvas();
