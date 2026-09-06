@@ -1,69 +1,59 @@
 const canvas = document.getElementById('canvas');
 let ctx = canvas.getContext('2d');
 
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+const startBtn = document.getElementById('startBtn');
+const restartBtn = document.getElementById('restartBtn');
+
 
 let numberOfImg = 2;
 
 let cols = 8;
 let rows = 2;
-
 let totalFrames = 8;
 let currentFrame = 0;
-
 let srcX = 0;
 let srcY = 0;
 let framesDrawn = 0;
 
-let spriteWidth=0;
-let spriteHeight=0;
+let spriteWidth = 0;
+let spriteHeight = 0;
 let scale = 1.5;
-
-let PlayerX;
-let PlayerY;
+let PlayerX, PlayerY;
+let speed = 4;
 
 let moveLeft = false;
 let moveRight = false;
 
-let ufoX = 0;
-let ufoY = 0;
-let ufoWidth = 80;  
-let ufoHeight = 80;
-
-let speed = 4;
-
-let lasers = [];
-let laserCooldown = 0;
-let laserCooldownMax = 60;
-let laserSpeed = 5;
-let laserRange = 100;
+let ufoX;
+let ufoWidth;
+let ufoHeight;
+let ufoScale = 0.35;
+let topMargin = -10;
 let ufoFollowSpeed = 0.01;
 
+let lasers = [];
+let laserCooldownMax = 60;
+let laserCooldown = laserCooldownMax;
+let laserSpeed = 7;
+let laserSpread = 100;
 let gameOver = false;
 
-function drawScene() {
 
+function drawScene() {
     ctx.fillStyle = 'black';
     ctx.fillRect(0, 0, canvas.width, canvas.height * 0.65);
-
     ctx.fillStyle = '#3d251e';
     ctx.fillRect(0, canvas.height * 0.65, canvas.width, canvas.height * 0.35);
 }
 
-function resizeSprite(){
-    let scale = 1.5;
+function resizeImage() {
     ctx.translate(PlayerX - (spriteWidth * scale) / 2, PlayerY - (spriteHeight * scale) / 2);
     ctx.scale(scale, scale);
 }
 
-function resizeUFO(){
-    let scale = 0.35;
-    let topMargin = -20; 
-    ctx.translate(
-       ufoX, topMargin
-    );
-    ctx.scale(scale, scale);
+function resizeUFO() {
+    ctx.translate(ufoX, topMargin);
+    ctx.scale(ufoScale, ufoScale);
 }
 
 function resizeCanvas() {
@@ -74,17 +64,14 @@ function resizeCanvas() {
     PlayerX = canvas.width / 2;
     PlayerY = canvas.height * 0.68 - (spriteHeight * scale) / 2;
 
-    ufoX = canvas.width / 2 - ufoWidth / 2;
-    ufoY = canvas.height * 0.2;
+    ufoX = canvas.width / 2 - (ufoWidth || 0) / 2;
 }
 
-function tryLaser() {
+function tryFireLaser() {
     if (laserCooldown <= 0) {
-        let offset = (Math.random() * 2 - 1) * laserRange;
-
+        let offset = (Math.random() * 2 - 1) * laserSpread;
         let startX = ufoX + ufoWidth / 2;
-        let startY = ufoY + ufoHeight * 0.8;
-
+        let startY = topMargin + ufoHeight * 0.8;
         let targetX = PlayerX + offset;
         let targetY = PlayerY;
 
@@ -97,21 +84,20 @@ function tryLaser() {
             dirX: dx / dist,
             dirY: dy / dist,
             travelled: 0,
-            length: 40 
+            length: 50,
+            flicker: Math.random() * 10
         });
-
         laserCooldown = laserCooldownMax;
     }
-
     if (laserCooldown > 0) laserCooldown--;
 }
 
 function updateAndDrawLasers() {
     ctx.save();
-    ctx.setTransform(1, 0, 0, 1, 0, 0); 
-    ctx.strokeStyle = 'red';
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.strokeStyle = "red";
+    ctx.lineCap = "round"
     ctx.lineWidth = 10;
-    ctx.lineCap = "round";
 
     for (let i = lasers.length - 1; i >= 0; i--) {
         let laser = lasers[i];
@@ -122,10 +108,26 @@ function updateAndDrawLasers() {
         let tailX = headX - laser.dirX * laser.length;
         let tailY = headY - laser.dirY * laser.length;
 
+        let pulse = 1 + Math.sin(laser.flicker) * 0.15;
+
+        ctx.strokeStyle = 'rgba(255, 60, 60, 0.35)';
+        ctx.lineWidth = 10 * pulse;
+        ctx.lineCap = 'round';
+        ctx.shadowColor = 'red';
+        ctx.shadowBlur = 12;
         ctx.beginPath();
         ctx.moveTo(tailX, tailY);
         ctx.lineTo(headX, headY);
         ctx.stroke();
+
+        ctx.strokeStyle = '#fff4e0';
+        ctx.lineWidth = 4 * pulse;
+        ctx.shadowBlur = 0;
+        ctx.beginPath();
+        ctx.moveTo(tailX, tailY);
+        ctx.lineTo(headX, headY);
+        ctx.stroke();
+
 
         if (headY > canvas.height + laser.length || headX < -50 || headX > canvas.width + 50) {
             lasers.splice(i, 1);
@@ -155,35 +157,43 @@ function checkLaserCollision() {
     return false;
 }
 
-function animate() {
-    if(gameOver) return;
-    drawScene();
-    requestAnimationFrame(animate); 
-    if(moveLeft){
-        PlayerX -= speed;
-    }
-    if(moveRight){
-        PlayerX += speed;
-    }
+function showGameOver() {
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.fillStyle = 'rgba(0,0,0,0.6)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    let scale = 1.5; 
+    ctx.fillStyle = 'white';
+    ctx.font = '48px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('GAME OVER', canvas.width / 2, canvas.height / 2);
+
+    restartBtn.style.display = 'block';
+}
+
+function animate() {
+    if (gameOver) return;
+
+    drawScene();
+    requestAnimationFrame(animate);
+
+    if (moveLeft) PlayerX -= speed;
+    if (moveRight) PlayerX += speed;
+
     let halfW = (spriteWidth * scale) / 2;
     PlayerX = Math.max(halfW, Math.min(window.innerWidth - halfW, PlayerX));
 
-    let targetUfoX = PlayerX - ufoWidth / 2; 
+    let targetUfoX = PlayerX - ufoWidth / 2;
     ufoX += (targetUfoX - ufoX) * ufoFollowSpeed;
-    
-    if(moveLeft || moveRight){
+
+    if (moveLeft || moveRight) {
         currentFrame = currentFrame % totalFrames;
         srcX = currentFrame * spriteWidth;
-    
         framesDrawn++;
-        if(framesDrawn >= 10){
-        currentFrame++;
-        framesDrawn = 0;
-       }
-    }
-    else{
+        if (framesDrawn >= 10) {
+            currentFrame++;
+            framesDrawn = 0;
+        }
+    } else {
         currentFrame = 2;
         srcX = currentFrame * spriteWidth;
     }
@@ -193,11 +203,11 @@ function animate() {
     ctx.drawImage(UFO, 0, 0, UFO.width, UFO.height);
     ctx.restore();
 
-    tryLaser();
+    tryFireLaser();
     updateAndDrawLasers();
 
     ctx.save();
-    resizeSprite();
+    resizeImage();
     ctx.drawImage(spriteSheet, srcX, srcY, spriteWidth, spriteHeight, 0, 0, spriteWidth, spriteHeight);
     ctx.restore();
 
@@ -207,25 +217,41 @@ function animate() {
     }
 }
 
-function showGameOver() {
-    ctx.setTransform(1, 0, 0, 1, 0, 0); 
-    ctx.fillStyle = 'rgba(0,0,0,0.6)';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+function loadImages() {
+    if (--numberOfImg > 0) return;
 
-    ctx.fillStyle = 'white';
-    ctx.font = '48px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('GAME OVER', canvas.width / 2, canvas.height / 2);
+    spriteWidth = spriteSheet.width / cols;
+    spriteHeight = spriteSheet.height / rows;
+
+    ufoWidth = UFO.width * ufoScale;
+    ufoHeight = UFO.height * ufoScale;
+
+    resizeCanvas();
+    drawScene(); 
 }
 
-function loadImages() {
-    if(--numberOfImg > 0) return;
-    spriteWidth = spriteSheet.width / cols;   
-    spriteHeight = spriteSheet.height / rows; 
+function startGame() {
+    startBtn.style.display = 'none';
+
+    gameOver = false;
+    lasers = [];
+    laserCooldown = 0;
+    currentFrame = 0;
+    framesDrawn = 0;
+    moveLeft = false;
+    moveRight = false;
 
     resizeCanvas();
     animate();
 }
+
+function restartGame() {
+    restartBtn.style.display = 'none';
+    startGame(); 
+}
+
+startBtn.addEventListener('click', startGame);
+restartBtn.addEventListener('click', restartGame);
 
 addEventListener("keydown", e => {
     if (e.key === "ArrowLeft") {
@@ -239,18 +265,19 @@ addEventListener("keydown", e => {
 });
 
 addEventListener("keyup", e => {
-    if (e.key === "ArrowLeft"){ moveLeft = false; }
-    if (e.key === "ArrowRight"){ moveRight = false; }
+    if (e.key === "ArrowLeft") moveLeft = false;
+    if (e.key === "ArrowRight") moveRight = false;
 });
 
 window.addEventListener('resize', resizeCanvas);
 
+
 const spriteSheet = new Image();
 const UFO = new Image();
- 
+
 spriteSheet.onload = loadImages;
 UFO.onload = loadImages;
- 
+
 spriteSheet.src = 'Spritesheet.png';
 UFO.src = 'UFO.png';
 
